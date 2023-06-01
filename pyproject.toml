@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=67.8.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "SATExpander"
+version = "0.0.1"
+authors = [
+    { name="Aaron Neugebuaer"}
+]
+description = "Simply expand SAT formulations using big wedges and vees."
+readme = "README.md"
+requires-python = ">= 3.11.3"
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: OS Independent",
+    "Development Status :: 2 - Pre-Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Natural Language :: English",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Utilities",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/PantomInach/SATExpander"
+"Bug Tracker" = "https://github.com/PantomInach/SATExpander/issues"
+
