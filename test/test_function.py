@@ -1,7 +1,7 @@
 import unittest
 
-from src.sat_expander.Quantor import QuantorContext
-from src.sat_expander.Function import Function, FunctionFactory
+from src.sat_expander.LogicalOperatorContext import LogicalOperatorContext
+from src.sat_expander.Functions import Function, FunctionFactory
 
 
 class TestFunction(unittest.TestCase):
@@ -24,7 +24,7 @@ class TestFunction(unittest.TestCase):
     def test_function_evaluate(self):
         domain = ((0, ), (1,), (2,), (3,))
         func = Function("test_func", 1, domain, start_variable=2)
-        context = QuantorContext.empty().expandContext(a=1, b=2, c=3)
+        context = LogicalOperatorContext.empty().expandContext(a=1, b=2, c=3)
         self.assertEqual(func.evaluate(("a", ), context), 3)
         self.assertEqual(func.evaluate(("b", ), context), 4)
         self.assertEqual(func.evaluate(("c", ), context), 5)
@@ -33,7 +33,7 @@ class TestFunction(unittest.TestCase):
 
         domain = ((0, 0), (1, 0), (2, 0), (3, 1))
         func = Function("test_func", 2, domain, start_variable=0)
-        context = QuantorContext.empty().expandContext(a=1, b=2, c=3, d=0)
+        context = LogicalOperatorContext.empty().expandContext(a=1, b=2, c=3, d=0)
         self.assertEqual(
             func.evaluate(("a", "d"), context),
             func.relation[(1, 0)]

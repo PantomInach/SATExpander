@@ -1,73 +1,73 @@
-from src.sat_expander.QuantorContext import QuantorContext
-from src.sat_expander.Quantor import ExpressionQuantor, Quantor, AllQuantor, ExistsQuantor, QuantorType
-from src.sat_expander.Function import Function
+from src.sat_expander.LogicalOperatorContext import LogicalOperatorContext
+from src.sat_expander.LogicalOperator import ExpressionOperator, LogicalOperator, AndOperator, OrOperator, LogicalOperatorType
+from src.sat_expander.Functions import Function
 
 from typing import Tuple
 
 import unittest
 
 
-class TestQuantorContext(unittest.TestCase):
-    def test_quantor_context_expand(self):
-        context = QuantorContext(dict())
+class TestOperatorContext(unittest.TestCase):
+    def test_operator_context_expand(self):
+        context = LogicalOperatorContext(dict())
         context2 = context.expandContext(a=1)
         context3 = context2.expandContext(b=2, c=2)
         self.assertEqual(context.vars, dict())
         self.assertEqual(context2.vars, {"a": 1})
         self.assertEqual(context3.vars, {"a": 1, "b": 2, "c": 2})
-        self.assertEqual(QuantorContext.empty().vars, dict())
+        self.assertEqual(LogicalOperatorContext.empty().vars, dict())
         with self.assertRaises(ValueError) as _:
             context3.expandContext(a=1)
 
-    def test_quantor_context_get(self):
-        context = QuantorContext({"a": 1})
+    def test_operator_context_get(self):
+        context = LogicalOperatorContext({"a": 1})
         self.assertEqual(context.getArgument("a"), 1)
-        context = QuantorContext({"a": (1, 2, 3)})
+        context = LogicalOperatorContext({"a": (1, 2, 3)})
         self.assertEqual(context.getArgument("a"), (1, 2, 3))
-        context = QuantorContext({"abc": 1})
+        context = LogicalOperatorContext({"abc": 1})
         self.assertEqual(context.getArgument("abc"), 1)
         with self.assertRaises(ValueError) as _:
             context.getArgument("Something")
 
 
-class TestExpressionQuantor(unittest.TestCase):
-    def test_expression_quantor_parse(self):
+class TestExpressionOperator(unittest.TestCase):
+    def test_expression_operator_parse(self):
         functions = list(
             map(lambda i: DummyFunction(f"func{i}", i), range(1, 4))
         )
         functions.append(DummyFunction("f", 0))
         functions = tuple(functions)
         expressions = ("  func1(  a)", "func2   (b,c)", " func3(d,e,    f  )  ")
-        expr_quant = ExpressionQuantor(functions, expressions)
-        self.assertEqual(expr_quant.expressions, (
+        expr_operator = ExpressionOperator(functions, expressions)
+        self.assertEqual(expr_operator.expressions, (
             (functions[0], ("a",), 1),
             (functions[1], ("b", "c"), 1),
             (functions[2], ("d", "e", "f"), 1)
         ))
         expressions = ("  func1(  a)", "func2   (b,b)")
-        expr_quant = ExpressionQuantor(functions, expressions)
-        self.assertEqual(expr_quant.expressions, (
+        expr_operator = ExpressionOperator(functions, expressions)
+        self.assertEqual(expr_operator.expressions, (
             (functions[0], ("a",), 1),
             (functions[1], ("b", "b"), 1),
         ))
         expressions = ("-func1(a)", )
-        expr_quant = ExpressionQuantor(functions, expressions)
-        self.assertEqual(expr_quant.expressions, (
+        expr_operator = ExpressionOperator(functions, expressions)
+        self.assertEqual(expr_operator.expressions, (
             (functions[0], ("a",), -1),
         ))
         expressions = ("-func1(a)", )
-        expr_quant = ExpressionQuantor(functions, expressions)
-        self.assertEqual(expr_quant.expressions, (
+        expr_operator = ExpressionOperator(functions, expressions)
+        self.assertEqual(expr_operator.expressions, (
             (functions[0], ("a",), -1),
         ))
         expressions = ("f", )
-        expr_quant = ExpressionQuantor(functions, expressions)
-        self.assertEqual(expr_quant.expressions, (
+        expr_operator = ExpressionOperator(functions, expressions)
+        self.assertEqual(expr_operator.expressions, (
             (functions[-1], (), 1),
         ))
         expressions = (" -  f ", )
-        expr_quant = ExpressionQuantor(functions, expressions)
-        self.assertEqual(expr_quant.expressions, (
+        expr_operator = ExpressionOperator(functions, expressions)
+        self.assertEqual(expr_operator.expressions, (
             (functions[-1], (), -1),
         ))
 
@@ -75,62 +75,62 @@ class TestExpressionQuantor(unittest.TestCase):
             "  func1(  a)a", "func2   (b,c)", "func3(d,e,    f  )  "
         )
         with self.assertRaises(ValueError) as _:
-            ExpressionQuantor(functions, expressions)
+            ExpressionOperator(functions, expressions)
         expressions = (
             "  func1(  a)", "func2   b,c)", "func3(d,e,    f  )  "
         )
         with self.assertRaises(ValueError) as _:
-            ExpressionQuantor(functions, expressions)
+            ExpressionOperator(functions, expressions)
         expressions = (
             "  func1(  a)", "func2   (b,c)", "func3(d,e),    f  )  "
         )
         with self.assertRaises(ValueError) as _:
-            ExpressionQuantor(functions, expressions)
+            ExpressionOperator(functions, expressions)
         expressions = (
             "  func1(  a()", "func2   (b,c)", "func3(d,e,    f  )  "
         )
         with self.assertRaises(ValueError) as _:
-            ExpressionQuantor(functions, expressions)
+            ExpressionOperator(functions, expressions)
         expressions = (
             "  func9(  a)", "func2   (b,c)", "func3(d,e,    f  )  "
         )
         with self.assertRaises(ValueError) as _:
-            ExpressionQuantor(functions, expressions)
+            ExpressionOperator(functions, expressions)
         expressions = (
             "  func(  a, a)", "func2   (b,c)", "func3(d,e,    f  )  "
         )
         with self.assertRaises(ValueError) as _:
-            ExpressionQuantor(functions, expressions)
+            ExpressionOperator(functions, expressions)
         # )
 
-    def test_expression_quantor_addSubquantor(self):
+    def test_expression_operator_addSuboperator(self):
         functions = (DummyFunction("func1", 1),)
         expressions = ("func1(a)", )
-        expr_quant = ExpressionQuantor(functions, expressions)
+        expr_quant = ExpressionOperator(functions, expressions)
         with self.assertRaises(NotImplementedError) as _:
-            expr_quant.add_subquantor(None)
+            expr_quant.add_suboperator(None)
 
-    def test_expression_quantor_evaluate(self):
-        expression_quantor = DummyExpressionQuantor(3, 0)
+    def test_expression_operator_evaluate(self):
+        expression_operator = DummyExpressionOperator(3, 0)
         self.assertEqual(
-            expression_quantor.evaluate(None),
+            expression_operator.evaluate(None),
             (("1|1", "2|1|2", "3|1|2|3"), )
         )
 
-        expression_quantor = DummyExpressionQuantor(0, 2)
-        self.assertEqual(expression_quantor.evaluate(None), (("1|", "2|"),))
+        expression_operator = DummyExpressionOperator(0, 2)
+        self.assertEqual(expression_operator.evaluate(None), (("1|", "2|"),))
 
-        expression_quantor = DummyExpressionQuantor(1, 1)
-        self.assertEqual(expression_quantor.evaluate(None), (("1|1", "2|"),))
+        expression_operator = DummyExpressionOperator(1, 1)
+        self.assertEqual(expression_operator.evaluate(None), (("1|1", "2|"),))
 
 
-class TestExistsQuantor(unittest.TestCase):
-    def test_existst_quantor_evaluate(self):
+class TestExistsOperator(unittest.TestCase):
+    def test_or_operator_evaluate(self):
         values = ((0, 0), (0, 1), (1, 0), (1, 1))
-        context = QuantorContext({"c": 1, "d": 2, "e": 3})
-        expression = DummySimpleQuantorEvaluation()
-        exists = ExistsQuantor(("a", "b"), values)
-        exists.add_subquantor(expression)
+        context = LogicalOperatorContext({"c": 1, "d": 2, "e": 3})
+        expression = DummySimpleOperatorEvaluation()
+        exists = OrOperator(("a", "b"), values)
+        exists.add_suboperator(expression)
         out = exists.evaluate(context)
         expected_res = ((
             "c" + ": " + str(1),
@@ -160,30 +160,30 @@ class TestExistsQuantor(unittest.TestCase):
         self.assertEqual(out, expected_res)
 
         values = ((0, 0), )
-        context = QuantorContext(dict())
-        expression = DummySimpleQuantorEvaluation()
-        exists = ExistsQuantor(("a", ), values)
-        exists.add_subquantor(expression)
+        context = LogicalOperatorContext(dict())
+        expression = DummySimpleOperatorEvaluation()
+        exists = OrOperator(("a", ), values)
+        exists.add_suboperator(expression)
         with self.assertRaises(RuntimeError) as _:
             exists.evaluate(context)
 
         values = ((0, ), )
-        context = QuantorContext(dict())
-        expression = DummyFixedQuantorEvaluation(((1,), (1,)))
-        exists = ExistsQuantor(("a", ), values)
-        exists.add_subquantor(expression)
+        context = LogicalOperatorContext(dict())
+        expression = DummyFixedOperatorEvaluation(((1,), (1,)))
+        exists = OrOperator(("a", ), values)
+        exists.add_suboperator(expression)
         with self.assertRaises(RuntimeError) as _:
             exists.evaluate(context)
 
 
-class TestAllQuantor(unittest.TestCase):
-    def test_all_quantor_evaluate(self):
+class TestAllOperator(unittest.TestCase):
+    def test_and_operator_evaluate(self):
         values = ((0, 0), (0, 1), (1, 0), (1, 1))
-        context = QuantorContext({"c": 1})
-        expression = DummySimpleQuantorEvaluation()
-        all_quant = AllQuantor(("a", "b"), values)
-        all_quant.add_subquantor(expression)
-        output = all_quant.evaluate(context)
+        context = LogicalOperatorContext({"c": 1})
+        expression = DummySimpleOperatorEvaluation()
+        and_operator = AndOperator(("a", "b"), values)
+        and_operator.add_suboperator(expression)
+        output = and_operator.evaluate(context)
         expected_res = (
             ("c: 1", "a: 0", "b: 0"),
             ("c: 1", "a: 0", "b: 1"),
@@ -193,64 +193,64 @@ class TestAllQuantor(unittest.TestCase):
         self.assertEqual(output, expected_res)
 
         values = ((0, 0), )
-        context = QuantorContext(dict())
-        all_quant = AllQuantor(("a", ), values)
-        all_quant.add_subquantor(expression)
+        context = LogicalOperatorContext(dict())
+        and_operator = AndOperator(("a", ), values)
+        and_operator.add_suboperator(expression)
         with self.assertRaises(RuntimeError) as _:
-            all_quant.evaluate(context)
+            and_operator.evaluate(context)
 
 
-class TestQuantor(unittest.TestCase):
-    def test_quantor_add_subquantor(self):
-        quant1 = Quantor(QuantorType.ALL, None, None)
-        quant2 = Quantor(QuantorType.ALL, None, None)
-        quant1.add_subquantor(quant2)
-        self.assertEqual(quant1.subquantor, quant2)
-        quant3 = Quantor(QuantorType.ALL, None, None)
-        quant4 = Quantor(QuantorType.EXISTS, None, None)
-        quant3.add_subquantor(quant4)
-        self.assertEqual(quant3.subquantor, quant4)
-        quant5 = Quantor(QuantorType.ALL, None, None)
-        quant6 = DummyExpressionQuantor(0, 0)
-        quant5.add_subquantor(quant6)
-        self.assertEqual(quant5.subquantor, quant6)
-        quant7 = Quantor(QuantorType.EXISTS, None, None)
-        quant8 = Quantor(QuantorType.ALL, None, None)
+class TestOperator(unittest.TestCase):
+    def test_operator_add_suboperator(self):
+        operator1 = LogicalOperator(LogicalOperatorType.ALL, None, None)
+        operator2 = LogicalOperator(LogicalOperatorType.ALL, None, None)
+        operator1.add_suboperator(operator2)
+        self.assertEqual(operator1.suboperator, operator2)
+        operator3 = LogicalOperator(LogicalOperatorType.ALL, None, None)
+        operator4 = LogicalOperator(LogicalOperatorType.EXISTS, None, None)
+        operator3.add_suboperator(operator4)
+        self.assertEqual(operator3.suboperator, operator4)
+        operator5 = LogicalOperator(LogicalOperatorType.ALL, None, None)
+        operator6 = DummyExpressionOperator(0, 0)
+        operator5.add_suboperator(operator6)
+        self.assertEqual(operator5.suboperator, operator6)
+        operator7 = LogicalOperator(LogicalOperatorType.EXISTS, None, None)
+        operator8 = LogicalOperator(LogicalOperatorType.ALL, None, None)
         with self.assertRaises(RuntimeError) as _:
-            quant7.add_subquantor(quant8)
-        quant9 = Quantor(QuantorType.EXISTS, None, None)
-        quant10 = Quantor(QuantorType.EXISTS, None, None)
-        quant9.add_subquantor(quant10)
-        self.assertEqual(quant9.subquantor, quant10)
-        quant11 = Quantor(QuantorType.EXISTS, None, None)
-        quant12 = DummyExpressionQuantor(0, 0)
-        quant11.add_subquantor(quant12)
-        self.assertEqual(quant11.subquantor, quant12)
+            operator7.add_suboperator(operator8)
+        operator9 = LogicalOperator(LogicalOperatorType.EXISTS, None, None)
+        operator10 = LogicalOperator(LogicalOperatorType.EXISTS, None, None)
+        operator9.add_suboperator(operator10)
+        self.assertEqual(operator9.suboperator, operator10)
+        operator11 = LogicalOperator(LogicalOperatorType.EXISTS, None, None)
+        operator12 = DummyExpressionOperator(0, 0)
+        operator11.add_suboperator(operator12)
+        self.assertEqual(operator11.suboperator, operator12)
 
-    def test_quantor_chain(self):
-        quant1 = Quantor(QuantorType.ALL, None, None)
-        quant2 = Quantor(QuantorType.ALL, None, None)
-        quant3 = Quantor(QuantorType.EXISTS, None, None)
-        quant4 = Quantor(QuantorType.EXISTS, None, None)
-        quant5 = DummyExpressionQuantor(0, 0)
-        quant1.chain(quant2).chain(quant3).chain(quant4).chain(quant5)
-        self.assertEqual(quant1.subquantor, quant2)
-        self.assertEqual(quant2.subquantor, quant3)
-        self.assertEqual(quant3.subquantor, quant4)
-        self.assertEqual(quant4.subquantor, quant5)
+    def test_operator_chain(self):
+        operator1 = LogicalOperator(LogicalOperatorType.ALL, None, None)
+        operator2 = LogicalOperator(LogicalOperatorType.ALL, None, None)
+        operator3 = LogicalOperator(LogicalOperatorType.EXISTS, None, None)
+        operator4 = LogicalOperator(LogicalOperatorType.EXISTS, None, None)
+        operator5 = DummyExpressionOperator(0, 0)
+        operator1.chain(operator2).chain(operator3).chain(operator4).chain(operator5)
+        self.assertEqual(operator1.suboperator, operator2)
+        self.assertEqual(operator2.suboperator, operator3)
+        self.assertEqual(operator3.suboperator, operator4)
+        self.assertEqual(operator4.suboperator, operator5)
         with self.assertRaises(RuntimeError) as _:
-            quant1.chain(Quantor(QuantorType.EXPRESSION, None, None))
+            operator1.chain(LogicalOperator(LogicalOperatorType.EXPRESSION, None, None))
         with self.assertRaises(RuntimeError) as _:
-            quant2.chain(Quantor(QuantorType.ALL, None, None))
+            operator2.chain(LogicalOperator(LogicalOperatorType.ALL, None, None))
         with self.assertRaises(RuntimeError) as _:
-            quant3.chain(Quantor(QuantorType.EXISTS, None, None))
-        quant6 = Quantor(QuantorType.ALL, None, None)
-        quant7 = Quantor(QuantorType.ALL, None, None)
-        quant8 = Quantor(QuantorType.EXISTS, None, None)
-        quant9 = Quantor(QuantorType.EXISTS, None, None)
-        quant6.chain(quant8).chain(quant9)
+            operator3.chain(LogicalOperator(LogicalOperatorType.EXISTS, None, None))
+        operator6 = LogicalOperator(LogicalOperatorType.ALL, None, None)
+        operator7 = LogicalOperator(LogicalOperatorType.ALL, None, None)
+        operator8 = LogicalOperator(LogicalOperatorType.EXISTS, None, None)
+        operator9 = LogicalOperator(LogicalOperatorType.EXISTS, None, None)
+        operator6.chain(operator8).chain(operator9)
         with self.assertRaises(RuntimeError) as _:
-            quant6.chain(quant7)
+            operator6.chain(operator7)
 
 
 class DummyFunction(Function):
@@ -259,7 +259,7 @@ class DummyFunction(Function):
         self.arguments_len = length
         self.evaluation = evaluation
 
-    def evaluate(self, args: Tuple[str], context: QuantorContext) -> int:
+    def evaluate(self, args: Tuple[str], context: LogicalOperatorContext) -> int:
         return str(self.evaluation) + "|" + "|".join(args)
 
 
@@ -269,13 +269,13 @@ class DummyConstant(Function):
         self.arguments_len = 0
         self.evaluation = name
     
-    def evaluate(self, args: Tuple[str, ...], context: QuantorContext) -> int:
+    def evaluate(self, args: Tuple[str, ...], context: LogicalOperatorContext) -> int:
         return self.name + "|" + "|".join(args)
 
 
-class DummyExpressionQuantor(ExpressionQuantor):
+class DummyExpressionOperator(ExpressionOperator):
     def __init__(self, number_of_functions, number_of_constants):
-        self.quantor_type = QuantorType.EXPRESSION
+        self.operator_type = LogicalOperatorType.EXPRESSION
         funcs = list(
             (
                 DummyFunction(f"func{i}", i, evaluation=i),
@@ -295,18 +295,18 @@ class DummyExpressionQuantor(ExpressionQuantor):
         self.expressions = tuple(funcs + consts)
 
 
-class DummySimpleQuantorEvaluation(Quantor):
+class DummySimpleOperatorEvaluation(LogicalOperator):
     def __init__(self):
-        self.quantor_type = QuantorType.EXPRESSION
+        self.operator_type = LogicalOperatorType.EXPRESSION
 
-    def evaluate(self, context: QuantorContext):
+    def evaluate(self, context: LogicalOperatorContext):
         return (tuple(str(k) + ": " + str(v) for k, v in context.vars.items()), )
 
 
-class DummyFixedQuantorEvaluation(Quantor):
+class DummyFixedOperatorEvaluation(LogicalOperator):
     def __init__(self, evaluation_result):
         self.evaluation_result = evaluation_result
-        self.quantor_type = QuantorType.EXPRESSION
+        self.operator_type = LogicalOperatorType.EXPRESSION
 
     def evaluate(self, _):
         return self.evaluation_result

@@ -1,4 +1,4 @@
-from src.sat_expander.QuantorContext import QuantorContext
+from src.sat_expander.LogicalOperatorContext import LogicalOperatorContext
 
 from typing import List, Tuple, Dict, TypeVar, Set, Iterable
 from warnings import warn
@@ -41,7 +41,7 @@ class Function:
             return False
         return self.range[0] <= value <= self.range[1]
 
-    def evaluate(self, arguments: Tuple[str, ...], context: QuantorContext) -> int:
+    def evaluate(self, arguments: Tuple[str, ...], context: LogicalOperatorContext) -> int:
         args: List[T] = []
         for arg in arguments:
             arg_value = context.getArgument(arg)

@@ -1,5 +1,5 @@
-from src.sat_expander.Function import FunctionFactory, Function
-from src.sat_expander.Quantor import AllQuantor, ExistsQuantor, ExpressionQuantor
+from src.sat_expander.Functions import FunctionFactory, Function
+from src.sat_expander.LogicalOperator import AndOperator, OrOperator, ExpressionOperator
 
 from itertools import product
 
@@ -12,10 +12,10 @@ class TestScenarios(unittest.TestCase):
         domain = tuple(product(base_set, repeat=2))
         factory = FunctionFactory()
         func: Function = factory.build("f", 2, domain)
-        quant = AllQuantor(("x", ), Function.to_tuple_iter(base_set)).chain(
-            ExistsQuantor(("y", ), Function.to_tuple_iter(base_set))
+        quant = AndOperator(("x", ), Function.to_tuple_iter(base_set)).chain(
+            OrOperator(("y", ), Function.to_tuple_iter(base_set))
         ).chain(
-            ExpressionQuantor(factory, ("f(x, y)",))
+            ExpressionOperator(factory, ("f(x, y)",))
         )
         f = func.relation
         expected_res = (
@@ -33,10 +33,10 @@ class TestScenarios(unittest.TestCase):
         factory = FunctionFactory()
         func1 = factory.build("ff", 2, domain1)
         func2 = factory.build("gg", 1, Function.to_tuple_iter(domain2))
-        quant = AllQuantor(("x", "y"), zip(base_set1, base_set2)).chain(
-            AllQuantor(("z"), Function.to_tuple_iter(base_set1))
+        quant = AndOperator(("x", "y"), zip(base_set1, base_set2)).chain(
+            AndOperator(("z"), Function.to_tuple_iter(base_set1))
         ).chain(
-            ExpressionQuantor(factory, ("-ff(z,y)", "gg(x)"))
+            ExpressionOperator(factory, ("-ff(z,y)", "gg(x)"))
         )
         f = func1.relation
         g = func2.relation
@@ -59,10 +59,10 @@ class TestScenarios(unittest.TestCase):
         domain1 = tuple(product(base_set1, base_set2))
         factory = FunctionFactory()
         func1 = factory.build("ff", 2, domain1)
-        quant = AllQuantor(("x", "y"), zip(base_set1, base_set2)).chain(
-            AllQuantor(("z",), Function.to_tuple_iter(base_set1))
+        quant = AndOperator(("x", "y"), zip(base_set1, base_set2)).chain(
+            AndOperator(("z",), Function.to_tuple_iter(base_set1))
         ).chain(
-            ExpressionQuantor(factory, ("-ff(z,y)", "ff(x,y)"))
+            ExpressionOperator(factory, ("-ff(z,y)", "ff(x,y)"))
         )
         f = func1.relation
         expected_result = (
@@ -83,8 +83,8 @@ class TestScenarios(unittest.TestCase):
         factory.add_constant("n")
         base_set = tuple(Function.to_tuple_iter(("hi", "bye")))
         func = factory.build("f", 1, base_set)
-        quant = AllQuantor(("x",), base_set).chain(
-            ExpressionQuantor(factory, ("-n", "f(x)"))
+        quant = AndOperator(("x",), base_set).chain(
+            ExpressionOperator(factory, ("-n", "f(x)"))
         )
         f = func.relation
         expected_result = (
@@ -92,8 +92,8 @@ class TestScenarios(unittest.TestCase):
             (-1, f[("bye",)]),
         )
         self.assertEqual(quant.evaluate(), expected_result)
-        quant2 = ExistsQuantor(("y",), base_set).chain(
-            ExpressionQuantor(factory, ("n", "-f(y)"))
+        quant2 = OrOperator(("y",), base_set).chain(
+            ExpressionOperator(factory, ("n", "-f(y)"))
         )
         expected_result = (
             (1, -f[("hi",)], 1, -f[("bye",)]),
