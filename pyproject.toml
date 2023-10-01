@@ -27,4 +27,3 @@ classifiers = [
 [project.urls]
 "Homepage" = "https://github.com/PantomInach/SATExpander"
 "Bug Tracker" = "https://github.com/PantomInach/SATExpander/issues"
-

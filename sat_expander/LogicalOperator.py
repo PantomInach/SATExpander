@@ -1,5 +1,5 @@
-from src.sat_expander.Functions import Function, FunctionFactory
-from src.sat_expander.LogicalOperatorContext import LogicalOperatorContext
+from sat_expander.Functions import Function, FunctionFactory
+from sat_expander.LogicalOperatorContext import LogicalOperatorContext
 
 from enum import Enum
 from typing import Dict, Tuple, Iterable, TypeVar, List, Optional

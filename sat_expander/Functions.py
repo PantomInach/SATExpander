@@ -1,4 +1,4 @@
-from src.sat_expander.LogicalOperatorContext import LogicalOperatorContext
+from sat_expander.LogicalOperatorContext import LogicalOperatorContext
 
 from typing import List, Tuple, Dict, TypeVar, Set, Iterable
 from warnings import warn
@@ -86,9 +86,9 @@ class Function:
                 return False
         return True
 
-    @staticmethod
-    def to_tuple_iter(iter: Iterable[T]) -> Iterable[Tuple[T]]:
-        return map(lambda x: (x, ), iter)
+
+def to_tuple_iter(iter: Iterable[T]) -> Iterable[Tuple[T]]:
+    return map(lambda x: (x, ), iter)
 
 
 class Constant(Function):

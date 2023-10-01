@@ -1,6 +1,6 @@
-from src.sat_expander.LogicalOperatorContext import LogicalOperatorContext
-from src.sat_expander.LogicalOperator import ExpressionOperator, LogicalOperator, AndOperator, OrOperator, LogicalOperatorType
-from src.sat_expander.Functions import Function
+from sat_expander.LogicalOperatorContext import LogicalOperatorContext
+from sat_expander.LogicalOperator import ExpressionOperator, LogicalOperator, AndOperator, OrOperator, LogicalOperatorType
+from sat_expander.Functions import Function
 
 from typing import Tuple
 

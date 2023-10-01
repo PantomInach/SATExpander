@@ -1,7 +1,7 @@
 import unittest
 
-from src.sat_expander.LogicalOperatorContext import LogicalOperatorContext
-from src.sat_expander.Functions import Function, FunctionFactory
+from sat_expander.LogicalOperatorContext import LogicalOperatorContext
+from sat_expander.Functions import Function, FunctionFactory, to_tuple_iter
 
 
 class TestFunction(unittest.TestCase):
@@ -17,7 +17,7 @@ class TestFunction(unittest.TestCase):
 
     def test_function_to_tuple_iter(self):
         self.assertEqual(
-            tuple(Function.to_tuple_iter(range(4))),
+            tuple(to_tuple_iter(range(4))),
             ((0, ), (1,), (2,), (3,))
         )
 
