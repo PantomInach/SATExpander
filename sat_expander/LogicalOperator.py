@@ -1,8 +1,9 @@
 from sat_expander.Functions import Function, FunctionFactory
 from sat_expander.LogicalOperatorContext import LogicalOperatorContext
+from sat_expander.ExclusionPredicates import ExclusionPredicate
 
 from enum import Enum
-from typing import Dict, Tuple, Iterable, TypeVar, List, Optional
+from typing import Dict, Tuple, Iterable, TypeVar, List, Optional, Callable, Any
 
 T = TypeVar('T')  # Type of the arguments for the function
 OptionLogicalOperator = Optional["LogicalOperator"]
@@ -17,13 +18,30 @@ class LogicalOperatorType(Enum):
 
 
 class LogicalOperator():
-    def __init__(self, type: LogicalOperatorType, variables: Tuple[str, ...], values: Iterable, suboperator: OptionLogicalOperator = None):
+    def __init__(
+        self,
+        type: LogicalOperatorType,
+        variables: Tuple[str, ...],
+        values: Iterable,
+        suboperator: OptionLogicalOperator = None,
+        exclude_predicate: ExclusionPredicate | None = None
+    ):
+        """
+        Keyword arguments:
+        exclude_predicate -- Depending on the current context given by the
+            'LogicalOperatorContext' and value to be considered the predicate
+            should decide if the value should be used in the CNF.
+        """
         self.operator_type: LogicalOperatorType = type
-        self.variables: None | Tuple[str] = variables
-        self.values: None | Tuple = None if values is None else tuple(values)
+        self.variables: None | Tuple[str, ...] = variables
+        self.values: Tuple = tuple(values)
         self.suboperator: None | LogicalOperator = suboperator
+        self.exclude_predicate: ExclusionPredicate | None = exclude_predicate
 
-    def evaluate(self, context: LogicalOperatorContext):
+    def evaluate(
+        self,
+        context: LogicalOperatorContext,
+    ):
         raise NotImplementedError(
             "Evaluate will not be implemented for base class.")
 
@@ -38,27 +56,31 @@ class LogicalOperator():
         if self.suboperator is None:
             self.add_suboperator(suboperator)
         elif self.suboperator.operator_type == LogicalOperatorType.EXPRESSION:
-            raise RuntimeError("Can't chain a operator to a static expression.")
+            raise RuntimeError(
+                "Can't chain a operator to a static expression.")
         else:
             self.suboperator.chain(suboperator)
         return self
 
 
 class AndOperator(LogicalOperator):
-    def __init__(self, variables: Tuple[str, ...], it: Iterable):
+    def __init__(self, variables: Tuple[str, ...], it: Iterable, exclude_predicate: ExclusionPredicate | None = None):
         """
         For all variables in it ...
         """
-        super().__init__(LogicalOperatorType.ALL, variables, it)
+        super().__init__(LogicalOperatorType.ALL, variables, it, exclude_predicate=exclude_predicate)
 
-    def evaluate(self, context: LogicalOperatorContext | None = None) -> CNF:
+    def evaluate(
+        self,
+        context: LogicalOperatorContext | None = None,
+    ) -> CNF:
         if context is None:
             context = LogicalOperatorContext.empty()
         res: List[Tuple[int]] = []
         for values in self.values:
             try:
                 len(values)
-            except TypeError as te:
+            except TypeError:
                 raise RuntimeError(
                     f"The values '{values}' are not iterable. Consider using 'Function.to_tuple_iter(domain)' as the domain in the definition of the AllQantor."
                 )
@@ -69,18 +91,23 @@ class AndOperator(LogicalOperator):
             current_context = context.expandContext(
                 **dict(zip(self.variables, values))
             )
+            if self.exclude_predicate is not None and not self.exclude_predicate(current_context, values):
+                continue
             res.extend(self.suboperator.evaluate(current_context))
         return tuple(res)
 
 
 class OrOperator(LogicalOperator):
-    def __init__(self, variables: Tuple[str, ...], it: Iterable):
+    def __init__(self, variables: Tuple[str, ...], it: Iterable, exclusion_predicate: ExclusionPredicate | None = None):
         """
         There exists a variable in it ...
         """
-        super().__init__(LogicalOperatorType.EXISTS, variables, it)
+        super().__init__(LogicalOperatorType.EXISTS, variables, it, exclude_predicate=exclusion_predicate)
 
-    def evaluate(self, context: LogicalOperatorContext | None = None) -> CNF:
+    def evaluate(
+        self,
+        context: LogicalOperatorContext | None = None,
+    ) -> CNF:
         if context is None:
             context = LogicalOperatorContext.empty()
         res: List[int] = []
@@ -92,6 +119,8 @@ class OrOperator(LogicalOperator):
             current_context = context.expandContext(
                 **dict(zip(self.variables, values))
             )
+            if self.exclude_predicate is not None and not self.exclude_predicate(current_context, values):
+                continue
             previous_cnf: CNF = self.suboperator.evaluate(current_context)
             if len(previous_cnf) != 1:
                 raise RuntimeError(
@@ -114,13 +143,16 @@ class ExpressionOperator(LogicalOperator):
             lambda exp: self.parse_expression(exp),
             expressions
         ))
-        super().__init__(LogicalOperatorType.EXPRESSION, None, None)
+        super().__init__(LogicalOperatorType.EXPRESSION, None, (), exclude_predicate=None)
 
     def add_suboperator(self, suboperator: LogicalOperator) -> LogicalOperator:
         raise NotImplementedError(
             "Operation 'add_suboperator' not supported for expression operator.")
 
-    def evaluate(self, context: LogicalOperatorContext) -> CNF:
+    def evaluate(
+        self,
+        context: LogicalOperatorContext,
+    ) -> CNF:
         return (tuple(
             exp[2] * exp[0].evaluate(exp[1], context)
             for exp in self.expressions
@@ -149,7 +181,8 @@ class ExpressionOperator(LogicalOperator):
         if overflow:
             raise ValueError(
                 f"Can't parse expression '{expression}'. It needs to follow the form 'f(x,y)'.")
-        args: Tuple[str] = () if arguments is None else tuple(arguments[:-1].split(","))
+        args: Tuple[str] = () if arguments is None else tuple(
+            arguments[:-1].split(","))
         if func_name.startswith("-"):
             func_name = func_name[1:]
             sign = -1

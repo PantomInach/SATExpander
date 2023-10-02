@@ -1,5 +1,6 @@
 from sat_expander.Functions import FunctionFactory, Function, to_tuple_iter
 from sat_expander.LogicalOperator import AndOperator, OrOperator, ExpressionOperator
+from sat_expander.ExclusionPredicates import check_variables_in_context, VarNotFoundResponse
 
 from itertools import product
 
@@ -99,3 +100,51 @@ class TestScenarios(unittest.TestCase):
             (1, -f[("hi",)], 1, -f[("bye",)]),
         )
         self.assertEqual(quant2.evaluate(), expected_result)
+
+    def test_scenario5(self):
+        factory = FunctionFactory()
+        factory.add_constant("n")
+        base_set = tuple(product(range(1, 4), repeat=2))
+        func = factory.build("f", 2, base_set)
+
+        @check_variables_in_context("x", "y", var_not_found_response=VarNotFoundResponse.ERROR)
+        def predicate(context, values):
+            return context.vars["x"] != context.vars["y"]
+
+        quant = AndOperator(("x", "y"), base_set, exclude_predicate=predicate).chain(
+            ExpressionOperator(factory, ("n", "f(x,y)"))
+        )
+        f = func.relation
+        expected_result = (
+            (1, f[(1, 2)]),
+            (1, f[(1, 3)]),
+            (1, f[(2, 1)]),
+            (1, f[(2, 3)]),
+            (1, f[(3, 1)]),
+            (1, f[(3, 2)]),
+        )
+        self.assertEqual(quant.evaluate(), expected_result)
+
+    def test_scenario6(self):
+        factory = FunctionFactory()
+        base_set = tuple(range(3))
+        comb = tuple(product(base_set, repeat=2))
+        func = factory.build("f", 2, comb)
+
+        @check_variables_in_context("x", "y", var_not_found_response=VarNotFoundResponse.ERROR)
+        def predicate(context, values):
+            return context.vars["y"] != (context.vars["x"] + 1) % 3
+
+        quant = AndOperator(("x", ), to_tuple_iter(base_set)).chain(
+            OrOperator(("y", ), to_tuple_iter(base_set), exclusion_predicate=predicate)
+        ).chain(
+            ExpressionOperator(factory, ("f(x,y)",))
+        )
+        f = func.relation
+        expected_result = (
+            (f[(0, 0)], f[(0, 2)]),
+            (f[(1, 0)], f[(1, 1)]),
+            (f[(2, 1)], f[(2, 2)]),
+        )
+        self.assertEqual(quant.evaluate(), expected_result)
+
