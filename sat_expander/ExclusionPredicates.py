@@ -59,9 +59,7 @@ def exclude_variable(
     """
     @check_variables_in_context(var, var_not_found_response=var_not_found_response)
     def predicate(context: LogicalOperatorContext, value: Tuple) -> bool:
-        if value == (context.vars[var], ):
-            return False
-        return True
+        return value != (context.vars[var], )
     return predicate
 
 
