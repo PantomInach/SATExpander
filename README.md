@@ -4,9 +4,7 @@ When working with complex SAT formulations, one formulates them often in with bi
 ## How To
 To build a CNF for a SAT formulation, we define its building blocks with `AllOperator`, `OrOperator` and `ExpresseionOperator`.
 We will show you how to use this tool to encode the following CNF.
-$$
-\bigwedge_{x \in A} \; \bigwedge_{(u, v) \in B} \; \bigvee_{y \in C \setminus \{x\}} s_{x,y} \vee r_{u} \vee w_{v, y} \vee t
-$$
+$$\bigwedge_{x \in A} \quad \bigwedge_{(u, v) \in B} \quad \bigvee_{y \in C \setminus \{x\}} s_{x,y} \vee r_{u} \vee w_{v, y} \vee t $$
 Here are $A, C$ some sets of individual arguments and $B = V \times U$ is a set containing a tuple of to arguments.
 
 ### Function
@@ -78,3 +76,5 @@ and_op1.chain(and_op2).chain(or_op).chain(expression)
 and_op1.evaluate()
 ```
 You can't chain any operator onto an `ExpressionOperator` and after an `OrOperator` only `OrOperator` and `ExpressionOperator` can be chained. Any operator can follow an `AndOperator`. This ensures that the resulting SAT formulation is in a conjunctive normal form (CNF).
+
+The `evaluate` function generates the CNF represented by a tuple of tuple of integers. Each interger represents a variable. If an integer is negative, then the variable is negated. Each line of the CNF is a tuple of integers representing the variables.
