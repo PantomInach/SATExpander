@@ -19,4 +19,3 @@ class TestCNF(unittest.TestCase):
 1 3 -5 0
 """
         self.assertEqual(cnf_to_dimacs(cnf, header=""), expected_result)
-

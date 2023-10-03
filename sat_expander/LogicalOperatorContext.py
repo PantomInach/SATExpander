@@ -3,6 +3,7 @@ from typing import Dict, TypeVar
 
 T = TypeVar("T")
 
+
 @dataclass
 class LogicalOperatorContext:
     vars: Dict[str, T]
@@ -10,7 +11,9 @@ class LogicalOperatorContext:
     def expandContext(self, **kwargs) -> "LogicalOperatorContext":
         intersection = set(self.vars.keys()).intersection(set(kwargs.keys()))
         if intersection:
-            raise ValueError(f"The arguments to add overlapp with the given arguments. Overlapp: {intersection}")
+            raise ValueError(
+                f"The arguments to add overlapp with the given arguments. Overlapp: {intersection}"
+            )
         return LogicalOperatorContext(vars={**self.vars, **kwargs})
 
     @staticmethod

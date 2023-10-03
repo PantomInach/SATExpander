@@ -3,11 +3,13 @@ from sat_expander.LogicalOperatorContext import LogicalOperatorContext
 from typing import List, Tuple, Dict, TypeVar, Set, Iterable
 from warnings import warn
 
-T = TypeVar('T')  # Type of the arguments for the function
+T = TypeVar("T")  # Type of the arguments for the function
 
 
 class Function:
-    def __init__(self, name: str, arguemts_len: int, domain: Iterable[T], start_variable: int):
+    def __init__(
+        self, name: str, arguemts_len: int, domain: Iterable[T], start_variable: int
+    ):
         domain = tuple(domain)
         self.was_evaluated: bool = False
         self.name: str = name
@@ -22,26 +24,28 @@ class Function:
                 else:
                     duplicates.append(x)
             warn(
-                f"The domain of function '{name}' contains duplicate values. Duplicates: {duplicates}")
+                f"The domain of function '{name}' contains duplicate values. Duplicates: {duplicates}"
+            )
 
         try:
             self.relation: Dict[T, int] = {
-                tuple(x): i
-                for i, x in enumerate(self.domain, start=start_variable)
+                tuple(x): i for i, x in enumerate(self.domain, start=start_variable)
             }
         except TypeError as te:
             raise RuntimeError(
-                "The single values in the domain of a function must be iterable.", str(te))
-        self.range: Tuple[int, int] = (
-            start_variable, start_variable - 1 + len(domain)
-        )
+                "The single values in the domain of a function must be iterable.",
+                str(te),
+            )
+        self.range: Tuple[int, int] = (start_variable, start_variable - 1 + len(domain))
 
     def in_range(self, value: int | None) -> bool:
         if value is None:
             return False
         return self.range[0] <= value <= self.range[1]
 
-    def evaluate(self, arguments: Tuple[str, ...], context: LogicalOperatorContext) -> int:
+    def evaluate(
+        self, arguments: Tuple[str, ...], context: LogicalOperatorContext
+    ) -> int:
         args: List[T] = []
         for arg in arguments:
             arg_value = context.getArgument(arg)
@@ -57,7 +61,8 @@ class Function:
     def set_equivalent(self, t1: T, t2: T):
         if self.was_evaluated:
             raise RuntimeError(
-                "Changing variables after evaluating function can lead to invalid results.")
+                "Changing variables after evaluating function can lead to invalid results."
+            )
         if self.relation.get(t1) and self.relation.get(t2):
             self.relation[t2] = self.relation[t1]
 
@@ -67,12 +72,12 @@ class Function:
         """
         if self.was_evaluated:
             raise RuntimeError(
-                "Changing variables after evaluating function can lead to invalid results.")
+                "Changing variables after evaluating function can lead to invalid results."
+            )
         remains: List[T] = list(self.domain)
         while remains:
             t = remains.pop(0)
-            exclude = (
-                x for x in remains if self._tuple_contain_same_elements(x, t))
+            exclude = (x for x in remains if self._tuple_contain_same_elements(x, t))
             for x in exclude:
                 self.relation[x] = self.relation[t]
                 remains.remove(x)
@@ -88,7 +93,7 @@ class Function:
 
 
 def to_tuple_iter(iter: Iterable[T]) -> Iterable[Tuple[T]]:
-    return map(lambda x: (x, ), iter)
+    return map(lambda x: (x,), iter)
 
 
 class Constant(Function):
@@ -105,15 +110,11 @@ class Constant(Function):
         return self.value
 
     def set_equivalent(self, *args):
-        warn(
-            f"Calling 'set_equivalent' on the Constant '{self.name}' has no effect."
-        )
+        warn(f"Calling 'set_equivalent' on the Constant '{self.name}' has no effect.")
         pass
 
     def set_commutative(self):
-        warn(
-            f"Calling 'set_commutative' on the Constant '{self.name}' has no effect."
-        )
+        warn(f"Calling 'set_commutative' on the Constant '{self.name}' has no effect.")
         pass
 
 
@@ -124,9 +125,7 @@ class FunctionFactory:
 
     def _assert_unique_name(self, name: str):
         if name in map(lambda f: f.name, self.functions):
-            raise ValueError(
-                f"The function with the name '{name}' is already defined."
-            )
+            raise ValueError(f"The function with the name '{name}' is already defined.")
 
     def build(self, name: str, arguments_len: int, domain: Iterable[T]) -> Function:
         self._assert_unique_name(name)
