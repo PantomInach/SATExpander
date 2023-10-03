@@ -1,14 +1,13 @@
 from sat_expander.Functions import Function, FunctionFactory
 from sat_expander.LogicalOperatorContext import LogicalOperatorContext
 from sat_expander.ExclusionPredicates import ExclusionPredicate
+from sat_expander.CNF import CNF
 
 from enum import Enum
-from typing import Dict, Tuple, Iterable, TypeVar, List, Optional, Callable, Any
+from typing import Dict, Tuple, Iterable, TypeVar, List, Optional
 
 T = TypeVar('T')  # Type of the arguments for the function
 OptionLogicalOperator = Optional["LogicalOperator"]
-CNFLine = Tuple[int, ...]
-CNF = Tuple[CNFLine, ...]
 
 
 class LogicalOperatorType(Enum):
@@ -68,7 +67,8 @@ class AndOperator(LogicalOperator):
         """
         For all variables in it ...
         """
-        super().__init__(LogicalOperatorType.ALL, variables, it, exclude_predicate=exclude_predicate)
+        super().__init__(LogicalOperatorType.ALL, variables,
+                         it, exclude_predicate=exclude_predicate)
 
     def evaluate(
         self,
@@ -102,7 +102,8 @@ class OrOperator(LogicalOperator):
         """
         There exists a variable in it ...
         """
-        super().__init__(LogicalOperatorType.EXISTS, variables, it, exclude_predicate=exclusion_predicate)
+        super().__init__(LogicalOperatorType.EXISTS, variables,
+                         it, exclude_predicate=exclusion_predicate)
 
     def evaluate(
         self,
