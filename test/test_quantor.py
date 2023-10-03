@@ -1,5 +1,11 @@
 from sat_expander.LogicalOperatorContext import LogicalOperatorContext
-from sat_expander.LogicalOperator import ExpressionOperator, LogicalOperator, AndOperator, OrOperator, LogicalOperatorType
+from sat_expander.LogicalOperator import (
+    ExpressionOperator,
+    LogicalOperator,
+    AndOperator,
+    OrOperator,
+    LogicalOperatorType,
+)
 from sat_expander.Functions import Function
 
 from typing import Tuple
@@ -32,80 +38,64 @@ class TestOperatorContext(unittest.TestCase):
 
 class TestExpressionOperator(unittest.TestCase):
     def test_expression_operator_parse(self):
-        functions = list(
-            map(lambda i: DummyFunction(f"func{i}", i), range(1, 4))
-        )
+        functions = list(map(lambda i: DummyFunction(f"func{i}", i), range(1, 4)))
         functions.append(DummyFunction("f", 0))
         functions = tuple(functions)
         expressions = ("  func1(  a)", "func2   (b,c)", " func3(d,e,    f  )  ")
         expr_operator = ExpressionOperator(functions, expressions)
-        self.assertEqual(expr_operator.expressions, (
-            (functions[0], ("a",), 1),
-            (functions[1], ("b", "c"), 1),
-            (functions[2], ("d", "e", "f"), 1)
-        ))
+        self.assertEqual(
+            expr_operator.expressions,
+            (
+                (functions[0], ("a",), 1),
+                (functions[1], ("b", "c"), 1),
+                (functions[2], ("d", "e", "f"), 1),
+            ),
+        )
         expressions = ("  func1(  a)", "func2   (b,b)")
         expr_operator = ExpressionOperator(functions, expressions)
-        self.assertEqual(expr_operator.expressions, (
-            (functions[0], ("a",), 1),
-            (functions[1], ("b", "b"), 1),
-        ))
-        expressions = ("-func1(a)", )
+        self.assertEqual(
+            expr_operator.expressions,
+            (
+                (functions[0], ("a",), 1),
+                (functions[1], ("b", "b"), 1),
+            ),
+        )
+        expressions = ("-func1(a)",)
         expr_operator = ExpressionOperator(functions, expressions)
-        self.assertEqual(expr_operator.expressions, (
-            (functions[0], ("a",), -1),
-        ))
-        expressions = ("-func1(a)", )
+        self.assertEqual(expr_operator.expressions, ((functions[0], ("a",), -1),))
+        expressions = ("-func1(a)",)
         expr_operator = ExpressionOperator(functions, expressions)
-        self.assertEqual(expr_operator.expressions, (
-            (functions[0], ("a",), -1),
-        ))
-        expressions = ("f", )
+        self.assertEqual(expr_operator.expressions, ((functions[0], ("a",), -1),))
+        expressions = ("f",)
         expr_operator = ExpressionOperator(functions, expressions)
-        self.assertEqual(expr_operator.expressions, (
-            (functions[-1], (), 1),
-        ))
-        expressions = (" -  f ", )
+        self.assertEqual(expr_operator.expressions, ((functions[-1], (), 1),))
+        expressions = (" -  f ",)
         expr_operator = ExpressionOperator(functions, expressions)
-        self.assertEqual(expr_operator.expressions, (
-            (functions[-1], (), -1),
-        ))
+        self.assertEqual(expr_operator.expressions, ((functions[-1], (), -1),))
 
-        expressions = (
-            "  func1(  a)a", "func2   (b,c)", "func3(d,e,    f  )  "
-        )
+        expressions = ("  func1(  a)a", "func2   (b,c)", "func3(d,e,    f  )  ")
         with self.assertRaises(ValueError) as _:
             ExpressionOperator(functions, expressions)
-        expressions = (
-            "  func1(  a)", "func2   b,c)", "func3(d,e,    f  )  "
-        )
+        expressions = ("  func1(  a)", "func2   b,c)", "func3(d,e,    f  )  ")
         with self.assertRaises(ValueError) as _:
             ExpressionOperator(functions, expressions)
-        expressions = (
-            "  func1(  a)", "func2   (b,c)", "func3(d,e),    f  )  "
-        )
+        expressions = ("  func1(  a)", "func2   (b,c)", "func3(d,e),    f  )  ")
         with self.assertRaises(ValueError) as _:
             ExpressionOperator(functions, expressions)
-        expressions = (
-            "  func1(  a()", "func2   (b,c)", "func3(d,e,    f  )  "
-        )
+        expressions = ("  func1(  a()", "func2   (b,c)", "func3(d,e,    f  )  ")
         with self.assertRaises(ValueError) as _:
             ExpressionOperator(functions, expressions)
-        expressions = (
-            "  func9(  a)", "func2   (b,c)", "func3(d,e,    f  )  "
-        )
+        expressions = ("  func9(  a)", "func2   (b,c)", "func3(d,e,    f  )  ")
         with self.assertRaises(ValueError) as _:
             ExpressionOperator(functions, expressions)
-        expressions = (
-            "  func(  a, a)", "func2   (b,c)", "func3(d,e,    f  )  "
-        )
+        expressions = ("  func(  a, a)", "func2   (b,c)", "func3(d,e,    f  )  ")
         with self.assertRaises(ValueError) as _:
             ExpressionOperator(functions, expressions)
         # )
 
     def test_expression_operator_addSuboperator(self):
         functions = (DummyFunction("func1", 1),)
-        expressions = ("func1(a)", )
+        expressions = ("func1(a)",)
         expr_quant = ExpressionOperator(functions, expressions)
         with self.assertRaises(NotImplementedError) as _:
             expr_quant.add_suboperator(None)
@@ -113,8 +103,7 @@ class TestExpressionOperator(unittest.TestCase):
     def test_expression_operator_evaluate(self):
         expression_operator = DummyExpressionOperator(3, 0)
         self.assertEqual(
-            expression_operator.evaluate(None),
-            (("1|1", "2|1|2", "3|1|2|3"), )
+            expression_operator.evaluate(None), (("1|1", "2|1|2", "3|1|2|3"),)
         )
 
         expression_operator = DummyExpressionOperator(0, 2)
@@ -132,45 +121,44 @@ class TestExistsOperator(unittest.TestCase):
         exists = OrOperator(("a", "b"), values)
         exists.add_suboperator(expression)
         out = exists.evaluate(context)
-        expected_res = ((
-            "c" + ": " + str(1),
-            "d" + ": " + str(2),
-            "e" + ": " + str(3),
-            "a" + ": " + str(0),
-            "b" + ": " + str(0),
-
-            "c" + ": " + str(1),
-            "d" + ": " + str(2),
-            "e" + ": " + str(3),
-            "a" + ": " + str(0),
-            "b" + ": " + str(1),
-
-            "c" + ": " + str(1),
-            "d" + ": " + str(2),
-            "e" + ": " + str(3),
-            "a" + ": " + str(1),
-            "b" + ": " + str(0),
-
-            "c" + ": " + str(1),
-            "d" + ": " + str(2),
-            "e" + ": " + str(3),
-            "a" + ": " + str(1),
-            "b" + ": " + str(1),
-        ), )
+        expected_res = (
+            (
+                "c" + ": " + str(1),
+                "d" + ": " + str(2),
+                "e" + ": " + str(3),
+                "a" + ": " + str(0),
+                "b" + ": " + str(0),
+                "c" + ": " + str(1),
+                "d" + ": " + str(2),
+                "e" + ": " + str(3),
+                "a" + ": " + str(0),
+                "b" + ": " + str(1),
+                "c" + ": " + str(1),
+                "d" + ": " + str(2),
+                "e" + ": " + str(3),
+                "a" + ": " + str(1),
+                "b" + ": " + str(0),
+                "c" + ": " + str(1),
+                "d" + ": " + str(2),
+                "e" + ": " + str(3),
+                "a" + ": " + str(1),
+                "b" + ": " + str(1),
+            ),
+        )
         self.assertEqual(out, expected_res)
 
-        values = ((0, 0), )
+        values = ((0, 0),)
         context = LogicalOperatorContext(dict())
         expression = DummySimpleOperatorEvaluation()
-        exists = OrOperator(("a", ), values)
+        exists = OrOperator(("a",), values)
         exists.add_suboperator(expression)
         with self.assertRaises(RuntimeError) as _:
             exists.evaluate(context)
 
-        values = ((0, ), )
+        values = ((0,),)
         context = LogicalOperatorContext(dict())
         expression = DummyFixedOperatorEvaluation(((1,), (1,)))
-        exists = OrOperator(("a", ), values)
+        exists = OrOperator(("a",), values)
         exists.add_suboperator(expression)
         with self.assertRaises(RuntimeError) as _:
             exists.evaluate(context)
@@ -192,9 +180,9 @@ class TestAllOperator(unittest.TestCase):
         )
         self.assertEqual(output, expected_res)
 
-        values = ((0, 0), )
+        values = ((0, 0),)
         context = LogicalOperatorContext(dict())
-        and_operator = AndOperator(("a", ), values)
+        and_operator = AndOperator(("a",), values)
         and_operator.add_suboperator(expression)
         with self.assertRaises(RuntimeError) as _:
             and_operator.evaluate(context)
@@ -268,7 +256,7 @@ class DummyConstant(Function):
         self.name = name
         self.arguments_len = 0
         self.evaluation = name
-    
+
     def evaluate(self, args: Tuple[str, ...], context: LogicalOperatorContext) -> int:
         return self.name + "|" + "|".join(args)
 
@@ -280,17 +268,15 @@ class DummyExpressionOperator(ExpressionOperator):
             (
                 DummyFunction(f"func{i}", i, evaluation=i),
                 tuple(str(j) for j in range(1, i + 1)),
-                1
+                1,
             )
             for i in range(1, number_of_functions + 1)
         )
         consts = list(
-            (
-                DummyConstant(str(i)),
-                (),
-                1
+            (DummyConstant(str(i)), (), 1)
+            for i in range(
+                number_of_functions + 1, number_of_constants + number_of_functions + 1
             )
-            for i in range(number_of_functions + 1, number_of_constants + number_of_functions + 1)
         )
         self.expressions = tuple(funcs + consts)
 
@@ -300,7 +286,7 @@ class DummySimpleOperatorEvaluation(LogicalOperator):
         self.operator_type = LogicalOperatorType.EXPRESSION
 
     def evaluate(self, context: LogicalOperatorContext):
-        return (tuple(str(k) + ": " + str(v) for k, v in context.vars.items()), )
+        return (tuple(str(k) + ": " + str(v) for k, v in context.vars.items()),)
 
 
 class DummyFixedOperatorEvaluation(LogicalOperator):

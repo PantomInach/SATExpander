@@ -16,36 +16,24 @@ class TestFunction(unittest.TestCase):
         self.assertEqual(func.relation, {(1,): 1, (2,): 2, (3,): 3})
 
     def test_function_to_tuple_iter(self):
-        self.assertEqual(
-            tuple(to_tuple_iter(range(4))),
-            ((0, ), (1,), (2,), (3,))
-        )
+        self.assertEqual(tuple(to_tuple_iter(range(4))), ((0,), (1,), (2,), (3,)))
 
     def test_function_evaluate(self):
-        domain = ((0, ), (1,), (2,), (3,))
+        domain = ((0,), (1,), (2,), (3,))
         func = Function("test_func", 1, domain, start_variable=2)
         context = LogicalOperatorContext.empty().expandContext(a=1, b=2, c=3)
-        self.assertEqual(func.evaluate(("a", ), context), 3)
-        self.assertEqual(func.evaluate(("b", ), context), 4)
-        self.assertEqual(func.evaluate(("c", ), context), 5)
+        self.assertEqual(func.evaluate(("a",), context), 3)
+        self.assertEqual(func.evaluate(("b",), context), 4)
+        self.assertEqual(func.evaluate(("c",), context), 5)
         with self.assertRaises(ValueError) as _:
             func.evaluate(("a", "b"), context)
 
         domain = ((0, 0), (1, 0), (2, 0), (3, 1))
         func = Function("test_func", 2, domain, start_variable=0)
         context = LogicalOperatorContext.empty().expandContext(a=1, b=2, c=3, d=0)
-        self.assertEqual(
-            func.evaluate(("a", "d"), context),
-            func.relation[(1, 0)]
-        )
-        self.assertEqual(
-            func.evaluate(("d", "d"), context),
-            func.relation[(0, 0)]
-        )
-        self.assertEqual(
-            func.evaluate(("c", "a"), context),
-            func.relation[(3, 1)]
-        )
+        self.assertEqual(func.evaluate(("a", "d"), context), func.relation[(1, 0)])
+        self.assertEqual(func.evaluate(("d", "d"), context), func.relation[(0, 0)])
+        self.assertEqual(func.evaluate(("c", "a"), context), func.relation[(3, 1)])
         with self.assertRaises(ValueError) as _:
             func.evaluate(("c",), context)
         with self.assertRaises(ValueError) as _:

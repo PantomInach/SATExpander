@@ -13,26 +13,29 @@ class VarNotFoundResponse(Enum):
     IGNORE = 2
 
 
-def check_variables_in_context(*vars: Tuple[str], var_not_found_response: VarNotFoundResponse = VarNotFoundResponse.WARN):
+def check_variables_in_context(
+    *vars: Tuple[str],
+    var_not_found_response: VarNotFoundResponse = VarNotFoundResponse.WARN,
+):
     def decorator(predicate):
         def wrappe(context: LogicalOperatorContext, *args):
-            if _handle_vars_not_found(context, *vars, var_not_found_response=var_not_found_response):
+            if _handle_vars_not_found(
+                context, *vars, var_not_found_response=var_not_found_response
+            ):
                 return True
             return predicate(context, *args)
+
         return wrappe
+
     return decorator
 
 
 def _handle_vars_not_found(
     context: LogicalOperatorContext,
     *vars: str,
-    var_not_found_response: VarNotFoundResponse
+    var_not_found_response: VarNotFoundResponse,
 ) -> bool:
-    vars_not_found = tuple(
-        var
-        for var in vars
-        if var not in context.vars.keys()
-    )
+    vars_not_found = tuple(var for var in vars if var not in context.vars.keys())
     if vars_not_found:
         match var_not_found_response:
             case VarNotFoundResponse.WARN:
@@ -48,31 +51,35 @@ def _handle_vars_not_found(
         return True
     return False
 
+
 def exclude_variable(
-    var: str,
-    var_not_found_response: VarNotFoundResponse = VarNotFoundResponse.WARN
+    var: str, var_not_found_response: VarNotFoundResponse = VarNotFoundResponse.WARN
 ) -> ExclusionPredicate:
     """
     Generates exclusion predicate for excluding values which match a certain
     variable in the context. For example,
     And[x in V] Or[y in V\\{x}] ...
     """
+
     @check_variables_in_context(var, var_not_found_response=var_not_found_response)
     def predicate(context: LogicalOperatorContext, value: Tuple) -> bool:
-        return value != (context.vars[var], )
+        return value != (context.vars[var],)
+
     return predicate
 
 
 def exclude_var_tuple(
     *vars: Tuple[str, ...],
-    var_not_found_response: VarNotFoundResponse = VarNotFoundResponse.WARN
+    var_not_found_response: VarNotFoundResponse = VarNotFoundResponse.WARN,
 ) -> ExclusionPredicate:
     """
     Generates exlusion predicate for a tuple of variables.
     For example,
     And[x in V] And[y in U] Or[z in VxU \\ {(x, y)}] ...
     """
+
     @check_variables_in_context(*vars, var_not_found_response=var_not_found_response)
     def predicate(context: LogicalOperatorContext, value: Tuple) -> bool:
         return value != tuple(context.vars[var] for var in vars)
+
     return predicate
