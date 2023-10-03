@@ -1,6 +1,9 @@
 # SATExpander
 When working with complex SAT formulations, one formulates them often in with big 'AND' and 'OR' clauses, which are variable dependent. This program provides an easy way to transform these formulations into 'cnf' files, which are supported by most SAT solvers.
 
+## Installation
+Clone the repository with `git clone https://github.com/PantomInach/SATExpander.git` and install it with `pip install ./SatExpander`.
+
 ## How To
 To build a CNF for a SAT formulation, we define its building blocks with `AllOperator`, `OrOperator` and `ExpresseionOperator`.
 We will show you how to use this tool to encode the following CNF.
