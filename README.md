@@ -73,8 +73,32 @@ Predicates can use all variables in the context given by the operator before and
 At last, we need to chain the introduced operator. Take the first operator and chain the following operator like below.
 ```python
 and_op1.chain(and_op2).chain(or_op).chain(expression)
-and_op1.evaluate()
+cnf = and_op1.evaluate()
 ```
 You can't chain any operator onto an `ExpressionOperator` and after an `OrOperator` only `OrOperator` and `ExpressionOperator` can be chained. Any operator can follow an `AndOperator`. This ensures that the resulting SAT formulation is in a conjunctive normal form (CNF).
 
 The `evaluate` function generates the CNF represented by a tuple of tuple of integers. Each interger represents a variable. If an integer is negative, then the variable is negated. Each line of the CNF is a tuple of integers representing the variables.
+
+### Converting to DIMACS
+Most SAT solver take an file in [DIMACS format](https://ifm97.github.io/assignments/SAT-solver.pdf) as input. With the `sat_expander.CNF.cnf_to_dimacs` function the CNF of `cnf = and_op1.evaluate()` can be converted to a string satisfying the DIMACS format.
+```python
+from sat_expander.CNF import cnf_to_dimacs
+with open("output.cnf", "w") as f:
+    f.write(cnf_to_dimacs(cnf))
+```
+This would store the CNF in the DIMACS format as the file `output.cnf`.
+
+### Joining CNFs
+If your CNF is more complex and consists of more separated parts, then use the same `FunctionFactory`. Then the CNFs can be joined with the `sat_expander.CNF.join_cnfs` function.
+```python
+from sat_expander.CNF import join_cnfs
+cnf1 = ...
+cnf2 = ...
+join_cnfs(cnf1, cnf2)
+```
+This function simply calls the `+` operator for tuple. The following code is equivalent.
+```python
+cnf1 = ...
+cnf2 = ...
+cnf1 + cnf2
+```
